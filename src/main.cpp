@@ -47,6 +47,29 @@ int main() {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             if (event.type == SDL_QUIT) running = false;
+
+            if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+                bool pressed = event.type == SDL_KEYDOWN;
+                switch (event.key.keysym.scancode) {
+                    case SDL_SCANCODE_1: chip8.keys[0x1] = pressed; break;
+                    case SDL_SCANCODE_2: chip8.keys[0x2] = pressed; break;
+                    case SDL_SCANCODE_3: chip8.keys[0x3] = pressed; break;
+                    case SDL_SCANCODE_4: chip8.keys[0xC] = pressed; break;
+                    case SDL_SCANCODE_Q: chip8.keys[0x4] = pressed; break;
+                    case SDL_SCANCODE_W: chip8.keys[0x5] = pressed; break;
+                    case SDL_SCANCODE_E: chip8.keys[0x6] = pressed; break;
+                    case SDL_SCANCODE_R: chip8.keys[0xD] = pressed; break;
+                    case SDL_SCANCODE_A: chip8.keys[0x7] = pressed; break;
+                    case SDL_SCANCODE_S: chip8.keys[0x8] = pressed; break;
+                    case SDL_SCANCODE_D: chip8.keys[0x9] = pressed; break;
+                    case SDL_SCANCODE_F: chip8.keys[0xE] = pressed; break;
+                    case SDL_SCANCODE_Z: chip8.keys[0xA] = pressed; break;
+                    case SDL_SCANCODE_X: chip8.keys[0x0] = pressed; break;
+                    case SDL_SCANCODE_C: chip8.keys[0xB] = pressed; break;
+                    case SDL_SCANCODE_V: chip8.keys[0xF] = pressed; break;
+                    default: break;
+                }
+            }
         }
 
         auto now = std::chrono::steady_clock::now();

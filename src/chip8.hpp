@@ -5,6 +5,7 @@
 class chip8 {
 public:
     static constexpr float clock_interval = 1.0f / 60.0f;
+    bool keys[16]{};
 
     void start();
     void tick_timers();
