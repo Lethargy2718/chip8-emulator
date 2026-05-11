@@ -4,11 +4,38 @@
 
 #include "chip8.hpp"
 
-void audio_callback(void* userdata, uint8_t* stream, int len) {
+constexpr std::string rom_filename = "../ROMS/ibm.ch8";
+constexpr int render_scale = 10;
+
+void audio_callback(void* _, uint8_t* stream, const int len) {
     static int sample = 0;
     for (int i = 0; i < len; i++) {
         stream[i] = (sample++ / 20 % 2) ? 128 + 64 : 128 - 64;
     }
+}
+
+void render_display(SDL_Renderer* renderer, const chip8& chip) {
+    const auto& display = chip.get_display();
+
+    // Clear renderer
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
+    SDL_RenderClear(renderer);
+
+    // Set pixel draw color
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
+    // Draw each pixel
+    for (int y = 0; y < chip8::display_height; y++) {
+        for (int x = 0; x < chip8::display_width; x++) {
+            if (display[y * chip8::display_width + x]) {
+                SDL_Rect rect = { x * render_scale, y * render_scale, render_scale, render_scale };
+                SDL_RenderFillRect(renderer, &rect);
+            }
+        }
+    }
+
+    // Render
+    SDL_RenderPresent(renderer);
 }
 
 int main() {
@@ -18,7 +45,7 @@ int main() {
     SDL_Window* window = SDL_CreateWindow(
         "CHIP-8",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
-        640, 320,  // 64*10 and 32*10, scaled up
+        chip8::display_width * render_scale, chip8::display_height * render_scale,
         0
     );
 
@@ -33,13 +60,9 @@ int main() {
     spec.callback = audio_callback;
     SDL_AudioDeviceID audio_device = SDL_OpenAudioDevice(nullptr, 0, &spec, nullptr, 0);
 
-    // Timer
-    constexpr std::chrono::duration<float> timer_interval{chip8::clock_interval};
-    auto last_time = std::chrono::steady_clock::now();
-
     // Chip-8
     chip8 chip8;
-    chip8.start();
+    chip8.start(rom_filename);
 
     // Loop
     bool running = true;
@@ -71,16 +94,12 @@ int main() {
                 }
             }
         }
-
-        auto now = std::chrono::steady_clock::now();
-        auto elapsed = now - last_time;
-
-        if (elapsed >= timer_interval) {
-            last_time = now;
-            chip8.tick_timers();
-        }
-
+        chip8.tick();
         SDL_PauseAudioDevice(audio_device, chip8.is_playing_sound() ? 0 : 1);
+        if (chip8.should_display()) {
+            render_display(renderer, chip8);
+            chip8.reset_should_display();
+        }
     }
 
     // Cleanup
